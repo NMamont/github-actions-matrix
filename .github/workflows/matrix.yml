@@ -7,7 +7,7 @@ on:
       required: false
       default: '' 
 env:
-  environment: ${{ github.event.inputs.env || "dev" }}
+  environment: ${{ github.event.inputs.env || 'dev' }}
 
 jobs:
   test:
