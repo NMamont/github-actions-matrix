@@ -2,10 +2,11 @@ name: matrix-test
 
 on:
   workflow_dispatch:
-    env:
-      description: 'Environment name'     
-      required: false
-      default: '' 
+    inputs:
+      env:
+        description: 'Environment name'     
+        required: true
+        default: 'dev' 
 env:
   environment: ${{ github.event.inputs.env || 'dev' }}
 
@@ -13,11 +14,11 @@ jobs:
   test:
     strategy:
       matrix:
-        params: [ { name: app1, settings: settings1, values: 'values_app1-${{env.environment}}'}, { name: app2, settings: settings2, values: values_app2 } ]
+        params: [ { name: app1, settings: settings1, values: values_app1}, { name: app2, settings: settings2, values: values_app2 } ]
     runs-on: ubuntu-22.04
     steps:
       - name: Echo ${{ matrix.params.name }}
         run: |
           echo name --> ${{ matrix.params.name }}
           echo settings --> ${{ matrix.params.settings }}
-          echo values --> ${{ matrix.params.values }}
+          echo values --> ${{ matrix.params.values }}-${{env.environment}}
