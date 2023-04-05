@@ -30,7 +30,7 @@ jobs:
           app3
           tests/test2
         dir_names: true
-        dir_names_exclude_root: true
+        # dir_names_exclude_root: true
         # separator: ","
         # json_raw_format: true
         json: true
