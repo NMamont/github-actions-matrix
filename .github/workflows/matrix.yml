@@ -45,7 +45,8 @@ jobs:
     steps:
       - name: Echo #${{ matrix.service_name }}
         run: |
-          echo matrix -- > ${{ fromJson(needs.gen-matrix.outputs.matrix) }}
+          echo "matrix -- > ${{ fromJson(needs.gen-matrix.outputs.matrix) }}"
+          echo "matrix -- > ${{ needs.gen-matrix.outputs.matrix }}"
           # echo name --> ${{ matrix.service_name }}
           # echo settings --> ${{ matrix.params.settings }}
           # echo values --> ${{ matrix.params.values }}-${{env.environment}}
