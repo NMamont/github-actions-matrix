@@ -40,7 +40,7 @@ jobs:
   test:
     strategy:
       matrix:
-        service_name: ${{ needs.gen-matrix.outputs.matrix }}
+        service_name: [${{ needs.gen-matrix.outputs.matrix }}]
     runs-on: ubuntu-22.04
     needs: gen-matrix
     steps:
