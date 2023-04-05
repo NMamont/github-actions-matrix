@@ -47,6 +47,6 @@ jobs:
     steps:
       - name: Echo 
         run: |
-          echo matrix -- > ${{ fromJson( needs.gen-matrix.outputs.matrix) }}
+          # echo matrix -- > ${{ fromJson( needs.gen-matrix.outputs.matrix) }}
           echo json --> ${{ needs.gen-matrix.outputs.matrix }}
 
