@@ -25,6 +25,7 @@ jobs:
           app3
           tests/test2
         dir_names: "true"
+        dir_names_exclude_root: true
     outputs:
       matrix: ${{steps.diff.outputs.all_changed_files}}
     
