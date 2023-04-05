@@ -10,8 +10,8 @@ on:
   pull_request:
     branches:
       - main
-env:
-  environment: ${{ github.event.inputs.env || 'dev' }}
+# env:
+#   environment: ${{ github.event.inputs.env || 'dev' }}
 
 jobs:
   gen-matrix:
