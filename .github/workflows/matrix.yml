@@ -35,7 +35,7 @@ jobs:
         json_raw_format: true
         json: true
     - name: echo
-      run: echo ${{fromJson(steps.diff.outputs.all_changed_files)}}
+      run: echo ${{steps.diff.outputs.all_changed_files}}
     outputs:
       matrix: ${{steps.diff.outputs.all_changed_files}}
     
