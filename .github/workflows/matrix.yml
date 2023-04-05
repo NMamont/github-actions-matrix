@@ -34,20 +34,19 @@ jobs:
         separator: ","
         json_raw_format: true
         json: true
-    - name: echo
-      run: echo ${{steps.diff.outputs.all_changed_files}}
+    # - name: echo
+    #   run: echo ${{steps.diff.outputs.all_changed_files}}
     outputs:
       matrix: ${{steps.diff.outputs.all_changed_files}}
     
-  # test:
-  #   # strategy:
-  #   #   matrix:
-  #   #     service_name: ${{ fromJson( needs.gen-matrix.outputs.matrix) }}
-  #   runs-on: ubuntu-22.04
-  #   needs: gen-matrix
-  #   steps:
-  #     - name: Echo 
-  #       run: |
-  #         # echo matrix -- > ${{ fromJson( needs.gen-matrix.outputs.matrix) }}
-  #         echo json --> ${{ needs.gen-matrix.outputs.matrix }}
+  test:
+    strategy:
+      matrix:
+        service_name: ${{ fromJson( needs.gen-matrix.outputs.matrix) }}
+    runs-on: ubuntu-22.04
+    needs: gen-matrix
+    steps:
+      - name: Echo ${{ matrix.service_name }}
+        run: |
+          echo matrix works
 
