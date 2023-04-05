@@ -33,7 +33,7 @@ jobs:
         dir_names_exclude_root: true
         separator: ","
         json: true
-    # - name: echo
+    - name: echo
       run: echo ${{steps.diff.outputs.all_changed_files}}
     outputs:
       matrix: ${{steps.diff.outputs.all_changed_files}}
