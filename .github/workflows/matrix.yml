@@ -7,8 +7,11 @@ on:
         description: 'Environment name'     
         required: true
         default: 'dev' 
-env:
-  environment: ${{ github.event.inputs.env || 'dev' }}
+  pull_request:
+    branches:
+      - main
+# env:
+#   environment: ${{ github.event.inputs.env || 'dev' }}
 
 jobs:
   gen-matrix:
@@ -16,6 +19,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
     - name: Run changed-files with dir_names
       id: diff
       uses: tj-actions/changed-files@v35
@@ -24,21 +29,24 @@ jobs:
           app1
           app3
           tests/test2
-        dir_names: "true"
+        dir_names: true
+        dir_names_exclude_root: true
+        separator: ","
+        json_raw_format: true
+        json: true
+    # - name: echo
+    #   run: echo ${{steps.diff.outputs.all_changed_files}}
     outputs:
       matrix: ${{steps.diff.outputs.all_changed_files}}
     
   test:
-    # strategy:
-    #   matrix:
-    #     service_names: [ ${{steps.detect}} ]
+    strategy:
+      matrix:
+        service_name: ${{ fromJson( needs.gen-matrix.outputs.matrix) }}
     runs-on: ubuntu-22.04
     needs: gen-matrix
     steps:
-      - name: Echo 
-      # ${{ matrix.params.name }}
+      - name: Echo ${{ matrix.service_name }}
         run: |
-          echo matrix -- > ${{needs.gen-matrix.outputs.matrix}}
-          # echo name --> ${{ matrix.params.name }}
-          # echo settings --> ${{ matrix.params.settings }}
-          # echo values --> ${{ matrix.params.values }}-${{env.environment}}
+          echo matrix ${{ matrix.service_name }} works 
+
