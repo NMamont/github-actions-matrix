@@ -32,6 +32,7 @@ jobs:
         dir_names: true
         dir_names_exclude_root: true
         separator: ","
+        json: true
     # - name: echo
     #   run: echo ${{steps.diff.outputs.all_changed_files}}
     outputs:
@@ -40,7 +41,7 @@ jobs:
   test:
     strategy:
       matrix:
-        service_name: [${{ needs.gen-matrix.outputs.matrix }}]
+        service_name: ${{ fromJson( needs.gen-matrix.outputs.matrix) }}
     runs-on: ubuntu-22.04
     needs: gen-matrix
     steps:
