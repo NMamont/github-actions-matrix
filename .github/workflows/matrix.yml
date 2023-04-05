@@ -7,6 +7,9 @@ on:
         description: 'Environment name'     
         required: true
         default: 'dev' 
+  pull_request:
+    branches:
+      - main
 env:
   environment: ${{ github.event.inputs.env || 'dev' }}
 
@@ -17,7 +20,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
       with:
-        fetch-depth: 10
+        fetch-depth: 0
     - name: Run changed-files with dir_names
       id: diff
       uses: tj-actions/changed-files@v35
