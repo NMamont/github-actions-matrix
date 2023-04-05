@@ -35,9 +35,9 @@ jobs:
         json_raw_format: true
         json: true
     - name: echo
-      run: echo ${{steps.diff.outputs.all_changed_files}}
+      run: echo ${{fromJson(steps.diff.outputs.all_changed_files)}}
     outputs:
-      matrix: ${{fromJson(steps.diff.outputs.all_changed_files)}}
+      matrix: ${{steps.diff.outputs.all_changed_files}}
     
   # test:
   #   # strategy:
