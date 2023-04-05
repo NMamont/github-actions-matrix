@@ -39,13 +39,14 @@ jobs:
       matrix: ${{steps.diff.outputs.all_changed_files}}
     
   test:
-    strategy:
-      matrix:
-        service_name: ${{ fromJson( needs.gen-matrix.outputs.matrix) }}
+    # strategy:
+    #   matrix:
+    #     service_name: ${{ fromJson( needs.gen-matrix.outputs.matrix) }}
     runs-on: ubuntu-22.04
     needs: gen-matrix
     steps:
-      - name: Echo ${{ matrix.service_name }}
+      - name: Echo 
         run: |
-          echomatrix -- > ${{ matrix.service_name }}
+          echo matrix -- > ${{ fromJson( needs.gen-matrix.outputs.matrix) }}
+          echo json --> ${{ needs.gen-matrix.outputs.matrix }}
 
