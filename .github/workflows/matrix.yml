@@ -30,16 +30,15 @@ jobs:
       matrix: ${{steps.diff.outputs.all_changed_files}}
     
   test:
-    # strategy:
-    #   matrix:
-    #     service_names: [ ${{steps.detect}} ]
+    strategy:
+      matrix:
+        service_name: ${{needs.gen-matrix.outputs.matrix}}
     runs-on: ubuntu-22.04
     needs: gen-matrix
     steps:
-      - name: Echo 
-      # ${{ matrix.params.name }}
+      - name: Echo ${{ matrix.service_name }}
         run: |
-          echo matrix -- > ${{needs.gen-matrix.outputs.matrix}}
-          # echo name --> ${{ matrix.params.name }}
+          # echo matrix -- > ${{needs.gen-matrix.outputs.matrix}}
+          echo name --> ${{ matrix.service_name }}
           # echo settings --> ${{ matrix.params.settings }}
           # echo values --> ${{ matrix.params.values }}-${{env.environment}}
