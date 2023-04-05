@@ -48,5 +48,5 @@ jobs:
     steps:
       - name: Echo ${{ matrix.service_name }}
         run: |
-          echo matrix works
+          echo matrix ${{ matrix.service_name }} works 
 
