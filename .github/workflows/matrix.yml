@@ -36,7 +36,7 @@ jobs:
     - name: echo
       run: echo ${{steps.diff.outputs.all_changed_files}}
     outputs:
-      matrix: ${{steps.diff.outputs.all_changed_files}}
+      matrix: ${{fromJson(steps.diff.outputs.all_changed_files)}}
     
   # test:
   #   # strategy:
