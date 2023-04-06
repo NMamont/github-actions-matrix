@@ -30,21 +30,34 @@ jobs:
           app3
           tests/test2
         dir_names: true
-        dir_names_exclude_root: true
-        separator: ","
+        # dir_names_exclude_root: true
+        # separator: ","
         json_raw_format: true
         json: true
     # - name: echo
     #   run: echo ${{steps.diff.outputs.all_changed_files}}
     outputs:
       matrix: ${{steps.diff.outputs.all_changed_files}}
-    
+
+  check-matrix:
+    runs-on: ubuntu-latest
+    if: ${{ needs.gen-matrix.outputs.matrix != '[]' }}
+    name: Check matrix
+    needs: gen-matrix
+    steps:
+      - name: Check matrix
+        run: |
+          echo ${{ needs.gen-matrix.outputs.matrix }}
+
   test:
+    if: success()
     strategy:
       matrix:
         service_name: ${{ fromJson( needs.gen-matrix.outputs.matrix) }}
     runs-on: ubuntu-22.04
-    needs: gen-matrix
+    needs: 
+    - gen-matrix
+    - check-matrix
     steps:
       - name: Echo ${{ matrix.service_name }}
         run: |
