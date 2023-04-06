@@ -32,7 +32,7 @@ jobs:
         dir_names: true
         # dir_names_exclude_root: true
         # separator: ","
-        # json_raw_format: true
+        json_raw_format: true
         json: true
     # - name: echo
     #   run: echo ${{steps.diff.outputs.all_changed_files}}
