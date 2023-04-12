@@ -46,7 +46,7 @@ jobs:
         run: |
           echo ${{ needs.gen-matrix.outputs.matrix }}
 
-  lint-test::
+  lint-test:
     if: success()
     strategy:
       matrix:
