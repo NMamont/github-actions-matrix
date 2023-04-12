@@ -46,7 +46,7 @@ jobs:
         run: |
           echo ${{ needs.gen-matrix.outputs.matrix }}
 
-  test:
+  lint-test::
     if: success()
     strategy:
       matrix:
@@ -55,9 +55,6 @@ jobs:
     needs: 
     - gen-matrix
     - check-matrix
-    steps:
-  lint-test:
-    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
