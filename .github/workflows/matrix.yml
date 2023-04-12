@@ -83,6 +83,6 @@ jobs:
           fi
 
       - name: Run chart-testing (lint)
-        if: steps.list-changed.outputs.changed == 'true'
+        if: steps.list-changed.outputs.changed
         run: ct lint --chart-dirs ${{ matrix.service_name }} --target-branch ${{ github.event.repository.default_branch }}
 
