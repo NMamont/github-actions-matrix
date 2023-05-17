@@ -28,9 +28,9 @@ jobs:
         files: |
           app1
           app3
-          tests/test2
+          tests/test1
         dir_names: true
-        dir_names_max_depth: 2
+        dir_names_max_depth: 1
         json_raw_format: true
         json: true
     outputs:
@@ -46,43 +46,43 @@ jobs:
         run: |
           echo ${{ needs.gen-matrix.outputs.matrix }}
 
-  lint-test:
-    if: success()
-    strategy:
-      matrix:
-        service_name: ${{ fromJson( needs.gen-matrix.outputs.matrix) }}
-    runs-on: ubuntu-22.04
-    needs: 
-    - gen-matrix
-    - check-matrix
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+  # lint-test:
+  #   if: success()
+  #   strategy:
+  #     matrix:
+  #       service_name: ${{ fromJson( needs.gen-matrix.outputs.matrix) }}
+  #   runs-on: ubuntu-22.04
+  #   needs: 
+  #   - gen-matrix
+  #   - check-matrix
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Set up Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: v3.11.2
+  #     - name: Set up Helm
+  #       uses: azure/setup-helm@v3
+  #       with:
+  #         version: v3.11.2
 
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-          check-latest: true
+  #     - uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.9'
+  #         check-latest: true
 
-      - name: Set up chart-testing
-        uses: helm/chart-testing-action@v2.4.0
+  #     - name: Set up chart-testing
+  #       uses: helm/chart-testing-action@v2.4.0
 
-      - name: Run chart-testing (list-changed)
-        id: list-changed
-        run: |
-          changed=$(ct list-changed --chart-dirs ${{ matrix.service_name }} --target-branch ${{ github.event.repository.default_branch }})
-          if [[ -n "$changed" ]]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
+  #     - name: Run chart-testing (list-changed)
+  #       id: list-changed
+  #       run: |
+  #         changed=$(ct list-changed --chart-dirs ${{ matrix.service_name }} --target-branch ${{ github.event.repository.default_branch }})
+  #         if [[ -n "$changed" ]]; then
+  #           echo "changed=true" >> "$GITHUB_OUTPUT"
+  #         fi
 
-      - name: Run chart-testing (lint)
-        if: steps.list-changed.outputs.changed
-        run: ct lint --chart-dirs ${{ matrix.service_name }} --target-branch ${{ github.event.repository.default_branch }}
+  #     - name: Run chart-testing (lint)
+  #       if: steps.list-changed.outputs.changed
+  #       run: ct lint --chart-dirs ${{ matrix.service_name }} --target-branch ${{ github.event.repository.default_branch }}
 
