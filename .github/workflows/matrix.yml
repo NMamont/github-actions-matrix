@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        items: ${{ env.matrix_json }}
+        items: [{name: "ccm", tag: "2.0.3", suffix: "dev"}, {name: "ssm", tag: "2.0.4", suffix: "dev"}]
     steps:
     - name: matrix ${{ matrix.items.name }}
       run: |
