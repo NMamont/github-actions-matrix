@@ -17,7 +17,7 @@ on:
 jobs:
   test-matrix:
     runs-on: ubuntu-22.04
-
+    if: ${{ inputs.matrix_json != '[]' }}
     strategy:
       matrix:
         items: ${{inputs.matrix_json}}
