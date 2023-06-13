@@ -10,13 +10,14 @@ on:
   pull_request:
     branches:
       - main
-env:
+# env:
 #   environment: ${{ github.event.inputs.env || 'dev' }}
-  matrix_json: [{name: "ccm", tag: "2.0.3", suffix: "dev"}, {name: "ssm", tag: "2.0.4", suffix: "dev"}]
+  # matrix_json: [{name: "ccm", tag: "2.0.3", suffix: "dev"}, {name: "ssm", tag: "2.0.4", suffix: "dev"}]
 
 jobs:
   test-matrix:
     runs-on: ubuntu-22.04
+
     strategy:
       matrix:
         items: [{name: "ccm", tag: "2.0.3", suffix: "dev"}, {name: "ssm", tag: "2.0.4", suffix: "dev"}]
