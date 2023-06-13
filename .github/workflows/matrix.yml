@@ -10,43 +10,55 @@ on:
   pull_request:
     branches:
       - main
-# env:
+env:
 #   environment: ${{ github.event.inputs.env || 'dev' }}
+  matrix_json: [{name: "ccm", tag: "2.0.3", suffix: "dev"}, {name: "ssm", tag: "2.0.4", suffix: "dev"}]
 
 jobs:
-  gen-matrix:
+  test-matrix:
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        items: ${{ env.matrix_json }}
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-    - name: Run changed-files with dir_names
-      id: diff
-      uses: tj-actions/changed-files@v35
-      with:
-        # files: |
-        #   app1
-        #   app3
-        #   tests/test1
-        path: tests/test1
-        diff_relative: true
-        dir_names: true
-        dir_names_max_depth: 1
-        json_raw_format: true
-        json: true
-    outputs:
-      matrix: ${{steps.diff.outputs.all_changed_files}}
+    - name: matrix ${{ matrix.items.name }}
+      run: |
+        echo "component name = ${{ matrix.items.name }}"
+        echo "component tag = ${{ matrix.items.tag }}"
+        echo "component suffix = ${{ matrix.items.suffix }}"
+  # gen-matrix:
+  #   runs-on: ubuntu-22.04
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v3
+  #     with:
+  #       fetch-depth: 0
+  #   - name: Run changed-files with dir_names
+  #     id: diff
+  #     uses: tj-actions/changed-files@v35
+  #     with:
+  #       # files: |
+  #       #   app1
+  #       #   app3
+  #       #   tests/test1
+  #       path: tests/test1
+  #       diff_relative: true
+  #       dir_names: true
+  #       dir_names_max_depth: 1
+  #       json_raw_format: true
+  #       json: true
+  #   outputs:
+  #     matrix: ${{steps.diff.outputs.all_changed_files}}
 
-  check-matrix:
-    runs-on: ubuntu-latest
-    if: ${{ needs.gen-matrix.outputs.matrix != '[]' }}
-    name: Check matrix
-    needs: gen-matrix
-    steps:
-      - name: Check matrix
-        run: |
-          echo ${{ needs.gen-matrix.outputs.matrix }}
+  # check-matrix:
+  #   runs-on: ubuntu-latest
+  #   if: ${{ needs.gen-matrix.outputs.matrix != '[]' }}
+  #   name: Check matrix
+  #   needs: gen-matrix
+  #   steps:
+  #     - name: Check matrix
+  #       run: |
+  #         echo ${{ needs.gen-matrix.outputs.matrix }}
 
   # lint-test:
   #   if: success()
