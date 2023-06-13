@@ -3,10 +3,10 @@ name: matrix-test
 on:
   workflow_dispatch:
     inputs:
-      env:
-        description: 'Environment name'     
+      matrix_json:
+        description: 'matrix json'     
         required: true
-        default: 'dev' 
+        default: '[]' 
   pull_request:
     branches:
       - main
@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        items: [{name: "ccm", tag: "2.0.3", suffix: "dev"}, {name: "ssm", tag: "2.0.4", suffix: "dev"}]
+        items: ${{inputs.matrix_json}}
     steps:
     - name: matrix ${{ matrix.items.name }}
       run: |
