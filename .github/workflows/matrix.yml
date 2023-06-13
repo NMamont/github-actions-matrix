@@ -20,7 +20,7 @@ jobs:
     if: ${{ github.event.inputs.matrix_json != '[]' }}
     strategy:
       matrix:
-        items: ${{ github.event.inputs.matrix_json}}
+        items: ${{ fromJson( github.event.inputs.matrix_json) }}
     steps:
     - name: matrix ${{ matrix.items.name }}
       run: |
