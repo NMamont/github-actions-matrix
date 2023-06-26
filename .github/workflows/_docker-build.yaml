@@ -1,0 +1,138 @@
+# @example=### Example1: Basic example
+# name: "Basic example"
+# on:
+#   pull_request:
+# jobs:
+#   docker-build:
+#     name: Run docker build ccm-service
+#     uses: ./.github/workflows/_docker-build.yaml
+#     with:
+#       image_tag_suffix: dev - suffix added to current application version from .csproj
+#       build_branch: ${{github.head_ref}} - optional
+#       service_name: ccm-service
+#     secrets:
+#       gha_pat_token: ${{ secrets.GH_ACTIONS_PAT }}
+#       githab_token: ${{ secrets.GITHUB_TOKEN }}
+
+name: Template docker build
+
+on:
+  workflow_call:
+    inputs:
+      image_tag_suffix:
+        description: "image tag suffix for docker"
+        type: string
+      image_tag:
+        description: "image tag for docker"
+        type: string
+      build_branch:
+        description: "git branch to checkout"
+        required: true
+        type: string
+      service_name:
+        description: "service name which would to build"
+        required: true
+        type: string
+    secrets:
+      gha_pat_token:
+        required: true
+      githab_token:
+        required: true
+
+
+env:
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: ghcr.io
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_TAG_SUFFIX: ${{ inputs.image_tag_suffix || ''}}
+  IMAGE_TAG: ${{ inputs.image_tag || '' }}
+  BUILD_BRANCH: ${{inputs.build_branch }}
+  SERVICE_NAME: ${{inputs.service_name}}
+  NUGET_USER: "email"
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      # This is used to complete the identity challenge
+      # with sigstore/fulcio when running outside of PRs.
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ env.BUILD_BRANCH }}
+
+      - name: List files in the repository
+        run: |
+          ls -R ${{ github.workspace }}/${{ env.SERVICE_NAME}}
+
+      - name: Set docker tag
+        id: docker-tag
+        run: |
+          sudo apt update && sudo apt install -qqy libxml2-utils
+          APP_CURRENT_VERSION=$(find ./${{ env.SERVICE_NAME}}/* -name *.csproj -print | grep -v tests | xargs  xmllint --xpath 'string(/Project/PropertyGroup/Version)')
+          DOCKER_TAG="${{ env.IMAGE_TAG }}"
+          DOCKER_TAG_SUFFIX="${{ env.IMAGE_TAG_SUFFIX }}"
+          if [[ -z $DOCKER_TAG && -n $DOCKER_TAG_SUFFIX ]]; then
+            DOCKER_IMAGE_TAG="$APP_CURRENT_VERSION-$DOCKER_TAG_SUFFIX"
+            echo "docker_tag=$DOCKER_IMAGE_TAG" >> "$GITHUB_OUTPUT"
+          elif [[ -z $DOCKER_TAG && -z $DOCKER_TAG_SUFFIX ]]; then
+            DOCKER_IMAGE_TAG="$APP_CURRENT_VERSION"
+            echo "docker_tag=$DOCKER_IMAGE_TAG" >> "$GITHUB_OUTPUT"
+          else
+            DOCKER_IMAGE_TAG=$DOCKER_TAG
+            echo "docker_tag=$DOCKER_IMAGE_TAG" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate docker tag
+        run: |
+          TAG="${{ env.IMAGE_TAG }}"
+          if [[ ! "$TAG" =~ ^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$ ]]; then
+              echo "Invalid tag format"
+              exit 1
+          fi
+          echo "Tag is valid"
+          echo ${{ env.IMAGE_TAG }}
+        env:
+          IMAGE_TAG: ${{ steps.docker-tag.outputs.docker_tag }}
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@79abd3f86f79a9d68a23c75a09a9a85889262adf
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.githab_token }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,enable=true,priority=100,prefix=sha-,suffix=,format=short
+
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ${{ env.SERVICE_NAME }}/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{env.SERVICE_NAME}}:${{ env.IMAGE_TAG }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NUGET_USER=${{ env.NUGET_USER }}
+            NUGET_PAT=${{ secrets.gha_pat_token }}
+        env:
+          IMAGE_TAG: ${{ steps.docker-tag.outputs.docker_tag }}
