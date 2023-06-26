@@ -1,0 +1,89 @@
+# @example=### Example1: Basic example
+# name: "Basic example"
+# on:
+#   pull_request:
+# jobs:
+#   docker-build:
+#     name: Run docker build ccm-service
+#     uses: ./.github/workflows/_helm-package-utils.yaml
+#     with:
+#     chart_version: ${{github.ref_name}}
+#     service_name: ccm-service
+
+name: Template helm package for utils charts
+on:
+  workflow_call:
+    inputs:
+      chart_version:
+        description: "chart version to deploy"
+        type: string
+      service_name:
+        description: "service name which would to build"
+        required: true
+        type: string
+
+env:
+  CHART_PATH: "helm/src"
+  HELM_REPO_PATH: "helm/repo"
+  CHART_VERSION: ${{ inputs.chart_version || ''}}
+  SERVICE_NAME: ${{ inputs.service_name }}
+
+jobs:
+  helm-package:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Get chart version
+      id: chart-version
+      run: |
+        CHART_CURRENT_VERSION=$(helm show chart ./${{ env.CHART_PATH }}/${{ env.SERVICE_NAME }} | grep version | cut -d ":" -f 2)
+        CHART_VERSION=$(echo ${{ env.CHART_VERSION }} | cut -d '/' -f 2)
+        echo "current version - $CHART_CURRENT_VERSION"
+        if [[ -z $CHART_VERSION ]]; then
+          echo "CHART_VERSION=$CHART_CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "new version - $CHART_VERSION"
+        else
+          CHART_VERSION_TAG=$CHART_CURRENT_VERSION-$CHART_VERSION
+          echo "CHART_VERSION=$CHART_VERSION_TAG" >> "$GITHUB_OUTPUT"
+          echo "new version - $CHART_VERSION"
+        fi
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: v3.11.2
+
+    - name: Helm Publisher
+      id: helm-publish
+      uses: stefanprodan/helm-gh-pages@v1.7.0
+      continue-on-error: true
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        charts_dir: ${{ env.CHART_PATH }}
+        owner: ovhcloud-kms
+        branch: helm-charts
+        charts_url: https://raw.githubusercontent.com/ovhcloud-kms/ovhcloud-kms/helm-charts
+        target_dir: charts
+        chart_version: ${{ env.CHART_VERSION }}
+        commit_username: "OVHCLOUD-KMS BOT"
+        commit_email: "jevgenij@keyos.com"
+      env:
+        CHART_VERSION: ${{steps.chart-version.outputs.CHART_VERSION}}
+
+    - name: Helm Publisher retry action
+      if: steps.helm-publish.outcome == 'failure'
+      uses: stefanprodan/helm-gh-pages@v1.7.0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        charts_dir: ${{ env.CHART_PATH }}
+        owner: ovhcloud-kms
+        branch: helm-charts
+        charts_url: https://raw.githubusercontent.com/ovhcloud-kms/ovhcloud-kms/helm-charts
+        target_dir: charts
+        chart_version: ${{ env.CHART_VERSION }}
+        commit_username: "OVHCLOUD-KMS BOT"
+        commit_email: "jevgenij@keyos.com"
+      env:
+        CHART_VERSION: ${{steps.chart-version.outputs.CHART_VERSION}}

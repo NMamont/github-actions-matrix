@@ -1,0 +1,141 @@
+# @example=### Example1: Basic example
+# name: "Basic example"
+# on:
+#   pull_request:
+# jobs:
+#   docker-build:
+#     name: Run docker build ccm-service
+#     uses: ./.github/workflows/_helm-package-utils.yaml
+#     with:
+#       image_tag_suffix: dev
+#       chart_version: ${{github.ref_name}}
+#       service_name: ccm-service
+
+name: Template helm package
+on:
+  workflow_call:
+    inputs:
+      image_tag_suffix:
+        description: "image tag suffix for docker"
+        type: string
+      chart_version:
+        description: "chart version to deploy"
+        type: string
+      service_name:
+        description: "service name which would to build"
+        required: true
+        type: string
+
+env:
+  CHART_PATH: "helm/src"
+  HELM_REPO_PATH: "helm/repo"
+  CHART_VERSION: ${{ inputs.chart_version || ''}}
+  IMAGE_TAG_SUFFIX: ${{ inputs.image_tag_suffix || '' }}
+  SERVICE_NAME: ${{ inputs.service_name }}
+
+jobs:
+  helm-package:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Get chart name
+      id: chart-name
+      run: |
+        CHART_NAME=$(ls -1 ${{ env.SERVICE_NAME}}/${{env.CHART_PATH }})
+        echo "$CHART_NAME"
+        echo "CHART_NAME=$CHART_NAME" >> "$GITHUB_OUTPUT"
+
+    - name: Get chart version
+      id: chart-version
+      run: |
+        CHART_CURRENT_VERSION=$(helm show chart ./${{ env.SERVICE_NAME }}/${{ env.CHART_PATH }}/${{ env.CHART_NAME }} | grep version | cut -d ":" -f 2)
+        CHART_VERSION=$(echo ${{ env.CHART_VERSION }} | cut -d '/' -f 2)
+        echo "current version - $CHART_CURRENT_VERSION"
+        if [[ -z $CHART_VERSION ]]; then
+          echo "CHART_VERSION=$CHART_CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "new version - $CHART_VERSION"
+        else
+          CHART_VERSION_TAG=$CHART_CURRENT_VERSION-$CHART_VERSION
+          echo "CHART_VERSION=$CHART_VERSION_TAG" >> "$GITHUB_OUTPUT"
+          echo "new version - $CHART_VERSION"
+        fi
+      env:
+        CHART_NAME: ${{ steps.chart-name.outputs.CHART_NAME }}
+
+    - name: Set docker tag
+      id: docker-tag
+      run: |
+        sudo apt update && sudo apt install -qqy libxml2-utils
+        APP_CURRENT_VERSION=$(find ./${{ env.SERVICE_NAME}}/* -name *.csproj -print | grep -v tests | xargs  xmllint --xpath 'string(/Project/PropertyGroup/Version)')
+        DOCKER_TAG="${{ env.IMAGE_TAG }}"
+        DOCKER_TAG_SUFFIX="${{ env.IMAGE_TAG_SUFFIX }}"
+        if [[ -z $DOCKER_TAG && -n $DOCKER_TAG_SUFFIX ]]; then
+          DOCKER_IMAGE_TAG="$APP_CURRENT_VERSION-$DOCKER_TAG_SUFFIX"
+          echo "docker_tag=$DOCKER_IMAGE_TAG" >> "$GITHUB_OUTPUT"
+        elif [[ -z $DOCKER_TAG && -z $DOCKER_TAG_SUFFIX ]]; then
+          DOCKER_IMAGE_TAG="$APP_CURRENT_VERSION"
+          echo "docker_tag=$DOCKER_IMAGE_TAG" >> "$GITHUB_OUTPUT"
+        else
+          DOCKER_IMAGE_TAG=$DOCKER_TAG
+          echo "docker_tag=$DOCKER_IMAGE_TAG" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Validate docker tag
+      run: |
+        TAG="${{ env.IMAGE_TAG }}"
+        if [[ ! "$TAG" =~ ^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$ ]]; then
+            echo "Invalid tag format"
+            exit 1
+        fi
+        echo "Tag is valid"
+        echo ${{ env.IMAGE_TAG }}
+      env:
+        IMAGE_TAG: ${{ steps.docker-tag.outputs.docker_tag }}
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: v3.11.2
+
+    - name: Helm Publisher
+      id: helm-publish
+      uses: stefanprodan/helm-gh-pages@v1.7.0
+      continue-on-error: true
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        charts_dir: ./${{ env.SERVICE_NAME }}/${{ env.CHART_PATH }}
+        owner: ovhcloud-kms
+        branch: helm-charts
+        charts_url: https://raw.githubusercontent.com/ovhcloud-kms/ovhcloud-kms/helm-charts
+        target_dir: charts
+        chart_version: ${{ env.CHART_VERSION }}
+        app_version: ${{ env.APPLICATION_VERSION }}
+        commit_username: "OVHCLOUD-KMS BOT"
+        commit_email: "jevgenij@keyos.com"
+      env:
+        CHART_VERSION: ${{steps.chart-version.outputs.CHART_VERSION}}
+        APPLICATION_VERSION: ${{steps.docker-tag.outputs.docker_tag}}
+
+    - name: Random wait
+      if: steps.helm-publish.outcome == 'failure'
+      run: sleep $((RANDOM % 10 + 5))
+
+    - name: Helm Publisher retry action
+      if: steps.helm-publish.outcome == 'failure'
+      uses: stefanprodan/helm-gh-pages@v1.7.0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        charts_dir: ./${{ env.SERVICE_NAME }}/${{ env.CHART_PATH }}
+        owner: ovhcloud-kms
+        branch: helm-charts
+        charts_url: https://raw.githubusercontent.com/ovhcloud-kms/ovhcloud-kms/helm-charts
+        target_dir: charts
+        chart_version: ${{ env.CHART_VERSION }}
+        app_version: ${{ env.APPLICATION_VERSION }}
+        commit_username: "OVHCLOUD-KMS BOT"
+        commit_email: "jevgenij@keyos.com"
+      env:
+        CHART_VERSION: ${{steps.chart-version.outputs.CHART_VERSION}}
+        APPLICATION_VERSION: ${{steps.docker-tag.outputs.docker_tag}}
