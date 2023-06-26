@@ -27,40 +27,40 @@ jobs:
   #       echo "component name = ${{ matrix.items.name }}"
   #       echo "component tag = ${{ matrix.items.tag }}"
   #       echo "component suffix = ${{ matrix.items.suffix }}"
-  gen-matrix:
-    runs-on: ubuntu-22.04
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-    - name: Run changed-files with dir_names
-      id: diff
-      uses: tj-actions/changed-files@v35
-      with:
-        files: |
-          .githib/workflows/_*.yaml
-        #   app3
-        #   tests/test1
-        # path: .github/workflows
-        separator: ","
-        # diff_relative: true
-        # dir_names: true
-        # dir_names_max_depth: 1
-        # json_raw_format: true
-        # json: true
-    outputs:
-      matrix: ${{steps.diff.outputs.all_changed_files}}
+  # gen-matrix:
+  #   runs-on: ubuntu-22.04
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v3
+  #     with:
+  #       fetch-depth: 0
+  #   - name: Run changed-files with dir_names
+  #     id: diff
+  #     uses: tj-actions/changed-files@v35
+  #     with:
+  #       files: |
+  #         .githib/workflows/_*.yaml
+  #       #   app3
+  #       #   tests/test1
+  #       # path: .github/workflows
+  #       separator: ","
+  #       # diff_relative: true
+  #       # dir_names: true
+  #       # dir_names_max_depth: 1
+  #       # json_raw_format: true
+  #       # json: true
+  #   outputs:
+  #     matrix: ${{steps.diff.outputs.all_changed_files}}
 
-  check-matrix:
-    runs-on: ubuntu-latest
-    if: ${{ needs.gen-matrix.outputs.matrix != '[]' }}
-    name: Check matrix
-    needs: gen-matrix
-    steps:
-      - name: Check matrix
-        run: |
-          echo ${{ needs.gen-matrix.outputs.matrix }}
+  # check-matrix:
+  #   runs-on: ubuntu-latest
+  #   if: ${{ needs.gen-matrix.outputs.matrix != '[]' }}
+  #   name: Check matrix
+  #   needs: gen-matrix
+  #   steps:
+  #     - name: Check matrix
+  #       run: |
+  #         echo ${{ needs.gen-matrix.outputs.matrix }}
 
   lint-test:
     if: success()
@@ -68,8 +68,8 @@ jobs:
     #   matrix:
     #     service_name: ${{ fromJson( needs.gen-matrix.outputs.matrix) }}
     runs-on: ubuntu-22.04
-    needs: 
-    - gen-matrix
+    # needs: 
+    # - gen-matrix
     # - check-matrix
     steps:
       - name: Checkout
@@ -81,8 +81,8 @@ jobs:
         name: "Generate document"
         uses: gizumon/github-actions-documenter@main
         with:
-          target-filepaths: |
-            ${{ needs.gen-matrix.outputs.matrix }}
+          # target-filepaths: |
+          #   ${{ needs.gen-matrix.outputs.matrix }}
           should-skip-generate-agenda: true
           should-skip-generate-custom-actions: false
           should-skip-generate-reusable-workflows: false
