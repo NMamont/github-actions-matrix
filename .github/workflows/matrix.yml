@@ -74,7 +74,7 @@ jobs:
   lint-test:
     if: success()
     strategy:
-      matrix: ${{ fromJson( needs.gen-matrix.outputs.matrix_notapps) }}
+      matrix: ${{ fromJson( needs.gen-matrix.outputs.matrix_apps) }}
     runs-on: ubuntu-22.04
     needs: 
     - gen-matrix
