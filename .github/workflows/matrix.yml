@@ -56,8 +56,8 @@ jobs:
     - name: set matrix
       id: set-matrix
       run: |
-        echo "matrix_apps={\"files\":${{steps.diff.outputs.apps_all_changed_and_modified_files }}}" >> "$GITHUB_OUTPUT"
-        echo "matrix_notapps={\"files\":${{steps.diff.outputs.not_apps_all_changed_and_modified_files }}}" >> "$GITHUB_OUTPUT"
+        echo "matrix_apps={\"service_name\":${{steps.diff.outputs.apps_all_changed_and_modified_files }}}" >> "$GITHUB_OUTPUT"
+        echo "matrix_notapps={\"service_name\":${{steps.diff.outputs.not_apps_all_changed_and_modified_files }}}" >> "$GITHUB_OUTPUT"
     # outputs:
     #   matrix_apps: ${{steps.diff.outputs.apps_all_changed_and_modified_files}}
     #   matrix_notapps: ${{steps.diff.outputs.not_apps_all_changed_and_modified_files}}
@@ -74,8 +74,7 @@ jobs:
   lint-test:
     if: success()
     strategy:
-      matrix:
-        service_name: ${{ fromJSON( needs.gen-matrix.outputs.matrix_apps) }}
+      matrix: ${{ fromJson( needs.gen-matrix.outputs.matrix_notapps) }}
     runs-on: ubuntu-22.04
     needs: 
     - gen-matrix
@@ -104,8 +103,7 @@ jobs:
   lint-testna:
     if: success()
     strategy:
-      matrix:
-        service_name: ${{ fromJson( needs.gen-matrix.outputs.matrix_notapps) }}
+      matrix:  ${{ fromJson( needs.gen-matrix.outputs.matrix_notapps) }}
     runs-on: ubuntu-22.04
     needs: 
     - gen-matrix
