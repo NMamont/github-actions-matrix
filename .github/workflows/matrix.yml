@@ -54,7 +54,6 @@ jobs:
     - name: Echo vars
       run: echo "${{steps.diff.outputs.apps_all_changed_and_modified_files}} - ${{steps.diff.outputs.not_apps_all_changed_and_modified_files}} - ${{steps.diff.outputs.all_changed_files}}"
     - name: set matrix
-      run:      
       id: set-matrix
       run: |
         echo "matrix_apps={\"files\":${{steps.diff.outputs.apps_all_changed_and_modified_files }}}" >> "$GITHUB_OUTPUT"
