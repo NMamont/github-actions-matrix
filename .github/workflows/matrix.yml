@@ -46,10 +46,10 @@ jobs:
       with:
         files_yaml: |
           apps:
-            - app1
-            - app3
+            - app1/**
+            - app3/**
           not_apps:
-            - app2
+            - app2/**
         # path: tests/test1
         # diff_relative: true
         dir_names: true
