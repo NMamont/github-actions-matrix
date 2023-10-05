@@ -36,7 +36,7 @@ jobs:
         fetch-depth: 0
     - name: Run changed-files with dir_names
       id: diff
-      uses: tj-actions/changed-files@v35
+      uses: tj-actions/changed-files@v39
       with:
         files_yaml: |
           apps:
