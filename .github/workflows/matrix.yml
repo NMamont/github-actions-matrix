@@ -38,7 +38,7 @@ jobs:
       id: diff
       uses: tj-actions/changed-files@v35
       with:
-        files: |
+        files_yaml: |
           apps:
             - app1
             - app3
