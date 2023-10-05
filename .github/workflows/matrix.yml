@@ -58,9 +58,9 @@ jobs:
       run: |
         echo "matrix_apps={\"service_name\":${{steps.diff.outputs.apps_all_changed_and_modified_files }}}" >> "$GITHUB_OUTPUT"
         echo "matrix_notapps={\"service_name\":${{steps.diff.outputs.not_apps_all_changed_and_modified_files }}}" >> "$GITHUB_OUTPUT"
-    # outputs:
-    #   matrix_apps: ${{steps.diff.outputs.apps_all_changed_and_modified_files}}
-    #   matrix_notapps: ${{steps.diff.outputs.not_apps_all_changed_and_modified_files}}
+    outputs:
+      matrix_apps: ${{steps.set-matrix.outputs.matrix_apps}}
+      matrix_notapps: ${{steps.set-matrix.outputs.matrix_notapps}}
   check-matrix-apps:
     runs-on: ubuntu-latest
     if: ${{ needs.gen-matrix.outputs.matrix_apps != '[]' }}
