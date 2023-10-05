@@ -70,7 +70,7 @@ jobs:
     if: success()
     strategy:
       matrix:
-        service_name: ${{ fromJson( needs.gen-matrix.outputs.matrix_apps) }}
+        service_name: ${{ fromJSON( needs.gen-matrix.outputs.matrix_apps) }}
     runs-on: ubuntu-22.04
     needs: 
     - gen-matrix
