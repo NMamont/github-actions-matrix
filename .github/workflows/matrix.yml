@@ -44,7 +44,6 @@ jobs:
             - app3
           not_apps:
             - app2
-          tests/test1
         # path: tests/test1
         # diff_relative: true
         dir_names: true
@@ -57,7 +56,7 @@ jobs:
   check-matrix-apps:
     runs-on: ubuntu-latest
     if: ${{ needs.gen-matrix.outputs.matrix_apps != '[]' }}
-    name: Check matrix
+    name: Check matrix apps
     needs: gen-matrix
     steps:
       - name: Check matrix
@@ -87,7 +86,7 @@ jobs:
   check-matrix-notapps:
     runs-on: ubuntu-latest
     if: ${{ needs.gen-matrix.outputs.matrix_apps != '[]' }}
-    name: Check matrix
+    name: Check matrix not apps
     needs: gen-matrix
     steps:
       - name: Check matrix
