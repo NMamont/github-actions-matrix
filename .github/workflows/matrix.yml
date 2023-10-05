@@ -2,11 +2,11 @@ name: matrix-test
 
 on:
   workflow_dispatch:
-    inputs:
-      matrix_json:
-        description: 'matrix json'     
-        required: true
-        default: '[]' 
+    # inputs:
+    #   matrix_json:
+    #     description: 'matrix json'     
+    #     required: true
+    #     default: '[]' 
   pull_request:
     branches:
       - main
@@ -15,71 +15,110 @@ on:
   # matrix_json: [{name: "ccm", tag: "2.0.3", suffix: "dev"}, {name: "ssm", tag: "2.0.4", suffix: "dev"}]
 
 jobs:
-  test-matrix:
-    runs-on: ubuntu-22.04
-    if: ${{ github.event.inputs.matrix_json != '[]' }}
-    strategy:
-      matrix:
-        items: ${{ github.event.inputs.matrix_json}}
-    steps:
-    - name: matrix ${{ matrix.items.name }}
-      run: |
-        echo "component name = ${{ matrix.items.name }}"
-        echo "component tag = ${{ matrix.items.tag }}"
-        echo "component suffix = ${{ matrix.items.suffix }}"
-  # gen-matrix:
+  # test-matrix:
   #   runs-on: ubuntu-22.04
-  #   steps:
-  #   - name: Checkout
-  #     uses: actions/checkout@v3
-  #     with:
-  #       fetch-depth: 0
-  #   - name: Run changed-files with dir_names
-  #     id: diff
-  #     uses: tj-actions/changed-files@v35
-  #     with:
-  #       # files: |
-  #       #   app1
-  #       #   app3
-  #       #   tests/test1
-  #       path: tests/test1
-  #       diff_relative: true
-  #       dir_names: true
-  #       dir_names_max_depth: 1
-  #       json_raw_format: true
-  #       json: true
-  #   outputs:
-  #     matrix: ${{steps.diff.outputs.all_changed_files}}
-
-  # check-matrix:
-  #   runs-on: ubuntu-latest
-  #   if: ${{ needs.gen-matrix.outputs.matrix != '[]' }}
-  #   name: Check matrix
-  #   needs: gen-matrix
-  #   steps:
-  #     - name: Check matrix
-  #       run: |
-  #         echo ${{ needs.gen-matrix.outputs.matrix }}
-
-  # lint-test:
-  #   if: success()
+  #   if: ${{ github.event.inputs.matrix_json != '[]' }}
   #   strategy:
   #     matrix:
-  #       service_name: ${{ fromJson( needs.gen-matrix.outputs.matrix) }}
-  #   runs-on: ubuntu-22.04
-  #   needs: 
-  #   - gen-matrix
-  #   - check-matrix
+  #       items: ${{ fromJson( github.event.inputs.matrix_json) }}
   #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
-  #       with:
-  #         fetch-depth: 0
+  #   - name: matrix ${{ matrix.items.name }}
+  #     run: |
+  #       echo "component name = ${{ matrix.items.name }}"
+  #       echo "component tag = ${{ matrix.items.tag }}"
+  #       echo "component suffix = ${{ matrix.items.suffix }}"
+  gen-matrix:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Run changed-files with dir_names
+      id: diff
+      uses: tj-actions/changed-files@v39
+      with:
+        files_yaml: |
+          apps:
+            - app1/**
+            - app3/**
+          not_apps:
+            - app2/**
+        # path: tests/test1
+        # diff_relative: true
+        dir_names: true
+        dir_names_max_depth: 1
+        quotepath: false
+        json: true
+    - name: Echo vars
+      run: echo "${{steps.diff.outputs.apps_all_changed_and_modified_files}} - ${{steps.diff.outputs.not_apps_all_changed_and_modified_files}} - ${{steps.diff.outputs.all_changed_files}}"
+    - name: set matrix
+      id: set-matrix
+      run: |
+        echo "matrix_apps={\"service_name\":${{steps.diff.outputs.apps_all_changed_and_modified_files }}}" >> "$GITHUB_OUTPUT"
+        echo "matrix_notapps={\"service_name\":${{steps.diff.outputs.not_apps_all_changed_and_modified_files }}}" >> "$GITHUB_OUTPUT"
+    outputs:
+      matrix_apps: ${{steps.set-matrix.outputs.matrix_apps}}
+      matrix_notapps: ${{steps.set-matrix.outputs.matrix_notapps}}
+  check-matrix-apps:
+    runs-on: ubuntu-latest
+    if: ${{ needs.gen-matrix.outputs.matrix_apps != '[]' }}
+    name: Check matrix apps
+    needs: gen-matrix
+    steps:
+      - name: Check matrix
+        run: |
+          echo ${{ needs.gen-matrix.outputs.matrix_apps }}
 
-  #     - name: Set up Helm
-  #       uses: azure/setup-helm@v3
-  #       with:
-  #         version: v3.11.2
+  lint-test:
+    if: success()
+    strategy:
+      matrix: ${{ fromJson( needs.gen-matrix.outputs.matrix_apps) }}
+    runs-on: ubuntu-22.04
+    needs: 
+    - gen-matrix
+    - check-matrix-apps
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.11.2
+
+  check-matrix-notapps:
+    runs-on: ubuntu-latest
+    if: ${{ needs.gen-matrix.outputs.matrix_notapps != '[]' }}
+    name: Check matrix not apps
+    needs: gen-matrix
+    steps:
+      - name: Check matrix
+        run: |
+          echo ${{ needs.gen-matrix.outputs.matrix_notapps }}
+
+  lint-testna:
+    if: success()
+    strategy:
+      matrix:  ${{ fromJson( needs.gen-matrix.outputs.matrix_notapps) }}
+    runs-on: ubuntu-22.04
+    needs: 
+    - gen-matrix
+    - check-matrix-notapps
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.11.2
+
 
   #     - uses: actions/setup-python@v4
   #       with:
