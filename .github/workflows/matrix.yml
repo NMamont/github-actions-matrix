@@ -52,8 +52,8 @@ jobs:
         json_raw_format: true
         json: true
     outputs:
-      matrix_apps: ${{steps.diff.outputs.apps_all_changed_and_modified_files}}
-      matrix_notapps: ${{steps.diff.outputs.not_apps_all_changed_and_modified_files}}
+      matrix_apps: ${{steps.diff.outputs.apps_all_changed_files}}
+      matrix_notapps: ${{steps.diff.outputs.not_apps_all_changed_files}}
   check-matrix-apps:
     runs-on: ubuntu-latest
     if: ${{ needs.gen-matrix.outputs.matrix_apps != '[]' }}
